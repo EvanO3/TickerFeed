@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema({
     fileUri:String,
     uploadedAt:{type:Date, default:Date.now()}
   }],
-
+  skills:[String],
+  experience:[String],
   date_of_birth: {type: Date}
   //add roles if payment is involved
   
