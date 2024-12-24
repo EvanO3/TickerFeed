@@ -7,6 +7,11 @@ const userSchema = new mongoose.Schema({
   email:{type:String, required:true, unique:true},
   //password length will be validated in untils
   password: { type: String, required: true},
+  resumes:[{
+    fileUri:String,
+    uploadedAt:{type:Date, default:Date.now()}
+  }],
+
   date_of_birth: {type: Date}
   //add roles if payment is involved
   
