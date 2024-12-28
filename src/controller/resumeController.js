@@ -36,95 +36,75 @@ async function extractData(filePath){
     let dataBuffer = fs.readFileSync(filePath)
     const data = await pdfParse(dataBuffer);
     const resumeText = data.text;
-    const filteredResumeText= preProcessText(resumeText);
-    const filteredSkills = extractSkills(filteredResumeText);
-    const filteredExperience = extractExperience(filteredResumeText)
-    const cleanedSkill = cleanSkills(filteredSkills)
-    const cleanedExp = cleanExperience(filteredExperience)
-
-    console.log(JSON.stringify({ cleanedSkill, filteredExperience }, null, 2));
+    const Education = extractEducation(resumeText) ;
+    const experience = extractExperience(resumeText);
+    const projects = extractProjects(resumeText)
+  
     //return { cleanedSkill, cleanedExperience };
     
 
-    
-    // let match;
-    // while((match= sectionRegx.exec(resumeText))!==null){
-    //     console.log(`${match[1].toUpperCase()} Section:`)
-    //     console.log(`${match[2].trim()}`);
-    //     console.log("-----------------------------------------------")
-    // }
-  
-          
-
-    
+console.log(projects);
 
 }
 
 
-function preProcessText(rawText){
-const normalizedText = rawText
-  .replace(/\r\n|\r|\n/g, "\n")
-  .replace(/[ \t]+/g, " ")
-  .trim();
-  return normalizedText;
+function extractEducation(text){
+    const EducationRegex = /(education|educational background|academic qualifications)[\s:]*\n([\s\S]*?)(?=\n{2,}|skills|work experience|certifications|projects|summary|achievements|$)/i;
+    const match = text.match(EducationRegex)
 
-
-}
-
-function extractSkills(text) {
-  const match = text.match(
-    /(?:^|\n)(skills|skills & interests|technical skills|Certifications)[\s:]*\n([\s\S]*?)(?=\n(?:[A-Z][A-Z\s]*:|[A-Z][A-Z\s]*\n|$))/i
-  );
-   console.log("Match here",match);
-  return match ? match[2].trim() : "No skills found.";
-}
-
-
-
-function extractExperience (text){// Match the experience section using regex
-  const match = text.match(
-    /(experience|work experience|professional experience)[\s:–-]*([\s\S]*?)(?=\n{2,}|skills|education|projects|summary|certifications|interests|achievements)/i
-  );
-  return match ? match[2].trim() : "No experience found.";}
-
-
-
-  //helper functions to clearn the information when processed
-
-
-  function cleanSkills(skillsText) {
-    return skillsText
-      .split("\n") // Split by line breaks
-      .map((line) => line.replace(/•\s*/, "").trim()) // Remove bullets and trim whitespace
-      .filter((line) => line); // Remove empty lines
-  }
-
-
-  function cleanExperience(experienceText) {
-    const jobRegex =
-      /(.*?)\s*–\s*(.*?)(?=\n{2,}|\b(education|skills|projects|certifications|interests)\b|$)/g;
-    const experiences = [];
-    let match;
-
-    while ((match = jobRegex.exec(experienceText)) !== null) {
-      const jobDescription = match[0].trim();
-      const companyPosition = match[1].trim();
-      const dateRange = match[2].trim();
-
-      // Replace the bullet points (•) with line breaks and remove the bullets
-      const formattedDescription = jobDescription
-        .replace(/•\s*/g, "") // Remove the bullet point
-        .replace(/\n/g, " \n") // Ensure each line breaks with a space
-        .trim();
-
-      // Combine company position, date range, and job description (responsibilities)
-      experiences.push(
-        `${companyPosition} ${dateRange} \n${formattedDescription}`
-      );
+    if(!match){
+        console.log("No match found for education")
     }
 
-    // Join all experiences into a single string, separating with line breaks between each job
-    return experiences.join("\n") || "No experience found.";
+    return match ? match[0] : "No match found"
+
+
+}
+
+function extractExperience(text){
+  const ExperienceRegex =
+    /(experience|work experience|professional experience)[\s:-]*([\s\S]*?)(?=\n{2,}|skills|certifications|projects|summary|achievements)/i;
+
+  ///
+
+
+  const match = text.match(ExperienceRegex);
+  if (!match) {
+    console.log("No match for experience");
   }
-  
+
+  return match ? match[0] : "Match for experience not found";
+}
+
+
+
+function extractProjects(text){
+    const projectsRegex1 =
+      /(projects|relevant projects|personal projects|leadership roles|certifications)[\s:-]*(\([^)]+\))?[\s:-]*([\s\S]*?)(?=\n{2,}(?=\n[A-Z][a-zA-Z\s]*:|$)(?!.*\n{2,}))/i;
+
+      //(projects|relevant projects|personal projects|leadership roles|certifications)[\s:-]*([\s\S]*?)(?=\n[A-Z][a-zA-Z\s]*:|$)/i;
+
+
+
+
+      const projectsRegex2 =
+        /(?:PROJECTS|RELEVANT PROJECTS|PERSONAL PROJECTS|LEADERSHIP ROLES|CERTIFICATIONS|[\*]{2}(?:Projects|Relevant Projects|Personal Projects|Leadership Roles|Certifications)[\*]{2})[\s\S]*?(?=\n+(?:[A-Z][A-Z]+\s*|[\*]{2}[A-Za-z\s]+[\*]{2})\n|$)(?!\n+(?:WORK EXPERIENCE|SKILLS|SKILLS & INTERESTS|EDUCATION|SUMMARY|CERTIFICATIONS)\b)/
+      //(?:PROJECTS|RELEVANT PROJECTS|PERSONAL PROJECTS|LEADERSHIP ROLES|CERTIFICATIONS|[\*]{2}(?:Projects|Relevant Projects|Personal Projects|Certifications)[\*]{2})[\s\S]*?(?=\n+(?:[A-Z][A-Z]+\s*|[\*]{2}[A-Za-z\s]+[\*]{2})\n|$)(?![\s\S]*\n+(?:WORK EXPERIENCE|SKILLS|SKILLS & INTERESTS|EDUCATION|SUMMARY)\b)/gi;
+
+       //(?:PROJECTS|RELEVANT PROJECTS|PERSONAL PROJECTS|LEADERSHIP ROLES|CERTIFICATIONS|[\*]{2}(?:Projects|Relevant Projects|Personal Projects|Leadership Roles|Certifications)[\*]{2})[\s\S]*?(?=\n+(?:[A-Z][A-Z]+\s*|[\*]{2}[A-Za-z\s]+[\*]{2})\n|$)(?!\n+(?:WORK EXPERIENCE|SKILLS|SKILLS & INTERESTS|EDUCATION|SUMMARY|CERTIFICATIONS)\b)
+
+
+
+
+    let match = text.match(projectsRegex1)
+
+    //checks if there is not a match, if so log no projects found.
+    if(!match || match.length ===0){
+       
+        match = text.match(projectsRegex2);
+    }
+    //if match then return first match found, if not function will return no project found
+    return match ? match[0]:"no project found"
+
+}
 module.exports={resumeUpload};
