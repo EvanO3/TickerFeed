@@ -1,0 +1,1 @@
+//job schema, which will take the search criteria of what the user wants 
