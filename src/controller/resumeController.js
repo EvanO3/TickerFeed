@@ -39,7 +39,7 @@ async function extractData(filePath){
     const Education = extractEducation(resumeText) ;
     const experience = extractExperience(resumeText);
     const projects = extractProjects(resumeText)
-  
+    const APIKEY;
     //return { cleanedSkill, cleanedExperience };
     
 
