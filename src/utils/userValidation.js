@@ -1,11 +1,17 @@
 
 
 const userValidation = {
-  name: {
+  firstname: {
     notEmpty: true,
     trim: true,
-    escape:true,
-    errorMessage: "Name must not be empty",
+    escape: true,
+    errorMessage: "First Name must not be empty",
+  },
+  lastname: {
+    notEmpty: true,
+    trim: true,
+    escape: true,
+    errorMessage: "Last name must not be empty",
   },
 
   email: {
@@ -14,15 +20,15 @@ const userValidation = {
     isEmail: {
       errorMessage: "Input must be an Email Address",
     },
-    normalizeEmail:true,
-    escape:true
+    normalizeEmail: true,
+    escape: true,
   },
 
   password: {
     errorMessage: "Password must have min 8 chars  and contain a special char",
     notEmpty: true,
     trim: true,
-    escape:true,
+    escape: true,
 
     //checks to see if its a strong password
 
