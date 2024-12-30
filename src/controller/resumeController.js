@@ -1,110 +1,162 @@
 const User = require("../models/user")
 const fs = require("fs")
-const pdfParse = require("pdf-parse")
+const axios =require("axios")
+const FormData = require("form-data");
+require("dotenv").config()
+
+/** Add Rate limiting for all endpoints, also add rate limiting for outside API Calls, i.e to Extraction API */
 const resumeUpload = async(req,res)=>{
     try{
-            if(!req.file) {return res.status(404).json({msg:"No File being uploaded"})}
-               const userId = req.userId;
-               const filePath = req.file.path
-               const data = await extractData(filePath)
-               console.log(data)
-    
-         const updatedUser=   await  User.findByIdAndUpdate(userId,
-            {$push:{resumes:{fileUri:filePath}}},
-                {new:true})
-        if(!updatedUser){
-            return res.status(404).json({msg:"User not found"})
-        }else{
-            res.status(200).json({msg:"Image uploaded successfully",
-                user:updatedUser
-            })
-        }
-    
-        }  catch(error){
+      if (!req.file) {
+        return res.status(404).json({ msg: "No File being uploaded" });
+      }
+      const userId = req.userId;
+      const filePath = req.file.path;
+   
+      let fileInformation = await uploadFiles(
+        process.env.Extracta_ai_API,
+        process.env.Extraction_ID,
+        [filePath]
+      );
+
+      console.log("Waiting for 60 seconds to allow for processing...")
+
+      await new Promise((resolve)=>setTimeout(resolve, 60000))
+      let usersInformation = await getBatchResults(
+        process.env.Extracta_ai_API,
+        process.env.Extraction_ID,
+        fileInformation.batchId
+      );
+
+
+
+      const firstFileResult = usersInformation.files[0]?.result || {};
+      const education = firstFileResult.education || [];
+      const skills = firstFileResult.skills || [];
+      const languages = firstFileResult.languages || [];
+      const experience = firstFileResult.work_experience || [];
+      const certificates = firstFileResult.certificates || [];
+
+         console.log("Users information: ", usersInformation)
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        {
+          $push: { resumes: { fileUri: filePath } },
+          $addToSet: {
+            education: { $each: education},
+            skills: { $each: skills },
+            Languages: { $each: languages },
+            experience: {
+              $each: experience
+            },
+            certificates: {
+              $each:certificates
+            },
+          },
+        },
+
+        { new: true }
+      );
+      if (!updatedUser) {
+        return res.status(404).json({ msg: "User not found" });
+      }
+      return res.status(200).json({
+        msg: "Image uploaded successfully",
+        user: updatedUser,
+      });
+    }  catch(error){
             console.error(error)
             res.status(500).json({msg:"Internal Server Error"})
         }
-}
-
-//helper function to parse the information from the PDF
-
-async function extractData(filePath){
-    //data will be extracted using a regex to find relevant skills and experience
-   
-    
-    
-    let dataBuffer = fs.readFileSync(filePath)
-    const data = await pdfParse(dataBuffer);
-    const resumeText = data.text;
-    const Education = extractEducation(resumeText) ;
-    const experience = extractExperience(resumeText);
-    const projects = extractProjects(resumeText)
-    const APIKEY;
-    //return { cleanedSkill, cleanedExperience };
-    
-
-console.log(projects);
-
+       
 }
 
 
-function extractEducation(text){
-    const EducationRegex = /(education|educational background|academic qualifications)[\s:]*\n([\s\S]*?)(?=\n{2,}|skills|work experience|certifications|projects|summary|achievements|$)/i;
-    const match = text.match(EducationRegex)
+const uploadFiles = async (token, extractionId, files, batchId = null)=>{
+  const url = process.env.extracta_url;
+  let formData = new FormData();
 
-    if(!match){
-        console.log("No match found for education")
-    }
+  formData.append("extractionId", extractionId);
 
-    return match ? match[0] : "No match found"
-
-
-}
-
-function extractExperience(text){
-  const ExperienceRegex =
-    /(experience|work experience|professional experience)[\s:-]*([\s\S]*?)(?=\n{2,}|skills|certifications|projects|summary|achievements)/i;
-
-  ///
-
-
-  const match = text.match(ExperienceRegex);
-  if (!match) {
-    console.log("No match for experience");
+  if (batchId) {
+    formData.append("batchId", batchId);
   }
 
-  return match ? match[0] : "Match for experience not found";
+  //appending the files to the batch for processing
+
+  files.forEach((file) => {
+    formData.append("files", fs.createReadStream(file));
+  });
+
+  //add rate limiting for this api request
+  try {
+    const response = await axios.post(url, formData, {
+      headers: {
+        ...formData.getHeaders(),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+  return response.data
+  } catch (error) {
+    console.error("Full error:", error);
+    throw error.response
+      ? error.response.data
+      : new Error(`Request failed: ${error.message}`);
+  }
 }
 
+/**
+ * gets the results from the uploaded file for the user, it incorporates polling so it periodically
+ * checks to see if the information has been returned
+**/
 
 
-function extractProjects(text){
-    const projectsRegex1 =
-      /(projects|relevant projects|personal projects|leadership roles|certifications)[\s:-]*(\([^)]+\))?[\s:-]*([\s\S]*?)(?=\n{2,}(?=\n[A-Z][a-zA-Z\s]*:|$)(?!.*\n{2,}))/i;
+    async function getBatchResults(token, extractionId, batchId, fileId=null) {
+      const url = process.env.extract_results_url;
+     
 
-      //(projects|relevant projects|personal projects|leadership roles|certifications)[\s:-]*([\s\S]*?)(?=\n[A-Z][a-zA-Z\s]*:|$)/i;
+     
+    
+      try {
+        // Constructing the request payload
+        const payload = {
+          extractionId,
+          batchId,
+        };
+
+        // Adding fileId to the payload if provided
+        if (fileId) {
+          payload.fileId = fileId;
+        }
+        
+            //add rate limiting for this api request
+        const response = await axios.post(url, payload, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
 
-
-
-      const projectsRegex2 =
-        /(?:PROJECTS|RELEVANT PROJECTS|PERSONAL PROJECTS|LEADERSHIP ROLES|CERTIFICATIONS|[\*]{2}(?:Projects|Relevant Projects|Personal Projects|Leadership Roles|Certifications)[\*]{2})[\s\S]*?(?=\n+(?:[A-Z][A-Z]+\s*|[\*]{2}[A-Za-z\s]+[\*]{2})\n|$)(?!\n+(?:WORK EXPERIENCE|SKILLS|SKILLS & INTERESTS|EDUCATION|SUMMARY|CERTIFICATIONS)\b)/
-      //(?:PROJECTS|RELEVANT PROJECTS|PERSONAL PROJECTS|LEADERSHIP ROLES|CERTIFICATIONS|[\*]{2}(?:Projects|Relevant Projects|Personal Projects|Certifications)[\*]{2})[\s\S]*?(?=\n+(?:[A-Z][A-Z]+\s*|[\*]{2}[A-Za-z\s]+[\*]{2})\n|$)(?![\s\S]*\n+(?:WORK EXPERIENCE|SKILLS|SKILLS & INTERESTS|EDUCATION|SUMMARY)\b)/gi;
-
-       //(?:PROJECTS|RELEVANT PROJECTS|PERSONAL PROJECTS|LEADERSHIP ROLES|CERTIFICATIONS|[\*]{2}(?:Projects|Relevant Projects|Personal Projects|Leadership Roles|Certifications)[\*]{2})[\s\S]*?(?=\n+(?:[A-Z][A-Z]+\s*|[\*]{2}[A-Za-z\s]+[\*]{2})\n|$)(?!\n+(?:WORK EXPERIENCE|SKILLS|SKILLS & INTERESTS|EDUCATION|SUMMARY|CERTIFICATIONS)\b)
-
-
-
-
-    let match = text.match(projectsRegex1)
-
-    //checks if there is not a match, if so log no projects found.
-    if(!match || match.length ===0){
-       
-        match = text.match(projectsRegex2);
+        
+         // Handling response
+        console.log(response.data.files[0].result)
+        return response.data; // Directly return the parsed JSON 
+    
+      } catch (error) {
+        // Handling errors
+        throw error.response
+          ? error.response.data
+          : new Error("An unknown error occurred");
+      }
+     
     }
-    //if match then return first match found, if not function will return no project found
-    return match ? match[0]:"no project found"
 
-}
-module.exports={resumeUpload};
+
+    
+
+
+
+
+module.exports={resumeUpload, uploadFiles};
