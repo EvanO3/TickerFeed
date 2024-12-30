@@ -8,7 +8,7 @@ const blacklisted = require("../models/blacklist.js")
 
 const createUser =  async (req, res)=>{
     //first check to see if the email already exits
-    const {name, email, password, date_of_birth }= req.body
+    const {firstname,lastname, email, password, date_of_birth }= req.body
 
     try{
         const existingUser = await User.findOne({email});
@@ -21,7 +21,8 @@ const createUser =  async (req, res)=>{
     const hashedPashword = await bcrypt.hash(password,10)
 
     const newUser = new User({
-        name: name,
+        firstname: firstname,
+        lastname:lastname,
         email:email,
         password: hashedPashword,
         date_of_birth:date_of_birth
