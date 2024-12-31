@@ -24,25 +24,25 @@ const userValidation = {
     escape: true,
   },
 
-  password: {
-    errorMessage: "Password must have min 8 chars  and contain a special char",
-    notEmpty: true,
-    trim: true,
-    escape: true,
+//   password: {
+//     errorMessage: "Password must have min 8 chars  and contain a special char",
+//     notEmpty: true,
+//     trim: true,
+//     escape: true,
 
-    //checks to see if its a strong password
+//     //checks to see if its a strong password
 
-    isStrongPassword: {
-      options: {
-        min: 8,
-        minUpperCase: 1,
-        minLowerCase: 1,
-        minSymbols: 1,
-      },
-    },
-    //this will ensure the password must have a special char
-    matches: { options: /^(?=.*[!@#$%^&*(),.?":{}|<>]).*$/ },
-  },
+//     isStrongPassword: {
+//       options: {
+//         min: 8,
+//         minUpperCase: 1,
+//         minLowerCase: 1,
+//         minSymbols: 1,
+//       },
+//     },
+//     //this will ensure the password must have a special char
+//     matches: { options: /^(?=.*[!@#$%^&*(),.?":{}|<>]).*$/ },
+//   },
 
   //add date validation
   Date: {},
