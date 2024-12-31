@@ -2,138 +2,136 @@ const User = require("../models/user.js")
 const bcrypt = require("bcryptjs")
 const {checkSchema} = require("express-validator")
 const { userValidator } = require("../utils/userValidation.js")
-const jwt = require("jsonwebtoken")
-const blacklisted = require("../models/blacklist.js")
+
+
+const { clerkClient } = require("@clerk/express");
 //This controller route creates the user and hash's the password before storing into DB
 
 const createUser =  async (req, res)=>{
     //first check to see if the email already exits
-    const {firstname,lastname, email, password, date_of_birth }= req.body
-
+    const {firstname,lastname, email, password, date_of_birth }= req.body;
+    
+    
     try{
-        const existingUser = await User.findOne({email});
-        if(existingUser)
-            {res.status(400).send({msg:"User already exits with that email"})
-    }
-    //--------------------------------
-    // change salt value so it gets generated diff for each pass using bcrypt.genSalt
-    //--------------------------------
-    const hashedPashword = await bcrypt.hash(password,10)
+        
 
-    const newUser = new User({
-        firstname: firstname,
-        lastname:lastname,
-        email:email,
-        password: hashedPashword,
-        date_of_birth:date_of_birth
+        const exisitingUser = await User.findOne({email})
 
-    })
+        if(exisitingUser){
+            return res.status(400).json({msg:"User already Exists"})
+        }
+        const newUser = await clerkClient.users.createUser({
+            firstname:firstname,
+            lastname:lastname,
+            emailAddress:[email],
+            password,
+            publicMetadata:{date_of_birth}
+        })
 
-    await newUser.save();
-    res.status(201).send({msg:"Thank You for Registering With Us"})
-
+            const user = new User({
+              clerkUserId: newUser.id, // Store Clerk's userId
+              firstname,
+              lastname,
+              email,
+              date_of_birth,
+            });
+        await user.save()
+res.status(201).send({ msg: "Thank you for registering with us!", userId: newUser.id });
     }catch(error){
-        console.error(`Error: ${error}`)
-        res.status(500).send({msg:"Server Error"})
+         console.error(`Error creating user: ${error}`);
+         res.status(500).send({ msg: "Server Error" });
     }
-
 }
+/**
+ * LOGIN ROUTE NEEDS TO BE FIXED, LOGIN DOES NOT WORK
+ */
 
 const login = async (req,res, next)=>{
-    try{
+    const {email, password} = req.body
+    
+   try {
+     //first find the user by their email
 
-        const {email, password} = req.body
-        const user = await User.findOne({email})
-        
-     
-        //if the user does not exist then throw error
-        if(!user){
-            return res.status(404).json({msg:"Authentication failed"})
-        }
+     const users = await clerkClient.users.getUserList({
+       filters: [
+         {
+           field: "primary_email_address",
+           operator: "equals",
+           value: email,
+         },
+       ],
+     });
 
-        //comparing to see if they gave the correct pass
-        await  bcrypt.compare(password, user.password, (err, result) => {
-           if (err) {
-             return res.status(401).json({msg:"Invalid Credentials"})
-           }
+     // More specific check
+     if (!users || !Array.isArray(users) || users.length === 0) {
+       return res.status(404).json({ msg: "User not found" });
+     }
 
-           if (result) {
-             const token = jwt.sign(
-               { userId: user._id },
-                 process.env.JWT_SECRET,
-               {
-                 expiresIn: "1h",
-               }
-             );
+     // Additional safety check
+     const clerkUser = users[0];
+     if (!clerkUser || !clerkUser.id) {
+       return res
+         .status(404)
+         .json({ msg: "Invalid user data returned from Clerk" });
+     }
 
-             //cookie sets here
-             let options={
-                maxAge:60*60*1000, // this will keep the cookie alive for 20 mins
-                httpOnly:true, // the cookies is only accessable in the wbe
-                //use secure in production change this val
-                //secure:true,
-                sameSite:"Strict"
-             }
-             res.cookie("SessionID", token, options)
-             res.status(200).json({ 
-                msg:"you have been successfully logged in"
-             });
-           } else {
-             res.status(401).json({ msg: "Invalid Passowrd" });
-           }
-         });
-        
-       
-    }catch(err){
-        next(err);
-    }
-}
+    
+     await clerkClient.users.verifyPassword({
+       userId: clerkUser.id,
+       password: password,
+     });
+     console.log("Clerk User:", clerkUser);
+
+     // Find the user in MongoDB using Clerk's userId
+     const user = await User.findOne({ clerkUserId: clerkUser.id });
+
+     // If the user doesn't exist in MongoDB, return an error
+     if (!user) {
+       return res.status(404).json({ msg: "User not found in our database" });
+     }
+
+     // Clerk automatically manages the session, so no need to manually create it.
+     // Set session cookies
+     const session = await clerkClient.sessions.create({
+       userId: clerkUser.id,
+     });
+
+     // Send session ID as cookie
+     res.cookie("SessionID", session.id, {
+       httpOnly: true,
+       sameSite: "Strict",
+       maxAge: 60 * 60 * 1000, // session expires after 1 hour
+     });
+
+     // Respond with success
+     res.status(200).json({ msg: "You have successfully logged in" });
+   } catch (err) {
+   console.error("Full error object:", err);
+   console.error(`Error logging in: ${err.message}`);
+    res.status(401).json({ msg: "Invalid credentials" });
+  }
+};
+
 
 
 const logout = async (req,res)=>{
     try{
-        const accessToken = req.cookies.SessionID
-
-        if (!accessToken){return res.sendStatus(204)}
-            //check if the token has already expired
-        const decodedToken = jwt.decode(accessToken);
-        if(decodedToken && decodedToken.exp < Date.now()/1000){
-            return res.status(204).json({msg:"token has already expired, please re-login"})
+        
+        const accessToken =req.cookies.SessionID;
+        if(!accessToken){
+            res.status(204).send()
         }
-
-        //additional check to see if the token has been blacklisted
-
-        const checkIfBlackListed = await blacklisted.findOne({
-          token: accessToken,
-        });
-
-        if(checkIfBlackListed){
-            return res.sendStatus(204)
-        }
-
-        //if the token isn't blacklisted then black list it
-        const newBlackList = new blacklisted({
-            token:accessToken
-        })
-
-        await newBlackList.save()
-        res.setHeader("Clear-Site-Data", "cookies")
+        //when use logsout takes token away so they would have to reauthenticate
+        await clerkClient.sessions.revokeSession(accessToken);
         res.clearCookie("SessionID",{
-                httpOnly:true, // the cookies is only accessable in the wbe
-                //use secure in production change this val
-                //secure:true,
-                sameSite:"Strict"
-        })
-        res.sendStatus(200).json({
-            message:"Successfully Logged out"
+            httpOnly:true,
+            sameSite:"Strict"
         })
 
+        res.status(200).json({msg:"Successfully logged out"})
     }catch(err){
-        console.error(err)
-        res.status(500).json({
-            status:'Error',
-            message:"Internal Server Error"
-        })
+        console.error(`Error logged ${err}`)
+        res.status(500).json({msg:"Internal Server Error"})
     }
 }
 
