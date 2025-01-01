@@ -10,7 +10,7 @@ const resumeUpload = async(req,res)=>{
       if (!req.file) {
         return res.status(404).json({ msg: "No File being uploaded" });
       }
-      const userId = req.userId;
+      const userId = req.user.id;
       const filePath = req.file.path;
    
       let fileInformation = await uploadFiles(
