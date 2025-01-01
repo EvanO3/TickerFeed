@@ -49,66 +49,50 @@ res.status(201).send({ msg: "Thank you for registering with us!", userId: newUse
 const login = async (req,res, next)=>{
     const {email, password} = req.body
     
-   try {
-     //first find the user by their email
+  try{
+    const users = await clerkClient.users.getUserList({
+      emailAddress: email,
+    });
+    if(users.data|| users.data.length===0){
+        return res.status(404).json({msg:"User not found"})
+    }
 
-     const users = await clerkClient.users.getUserList({
-       filters: [
-         {
-           field: "primary_email_address",
-           operator: "equals",
-           value: email,
-         },
-       ],
-     });
+    const clerkUser =users.data[0];
+    const userEmail= clerkUser.emailAddresses[0]?.emailAddress;
+    console.log("User email:", userEmail)
 
-     // More specific check
-     if (!users || !Array.isArray(users) || users.length === 0) {
-       return res.status(404).json({ msg: "User not found" });
-     }
 
-     // Additional safety check
-     const clerkUser = users[0];
-     if (!clerkUser || !clerkUser.id) {
-       return res
-         .status(404)
-         .json({ msg: "Invalid user data returned from Clerk" });
-     }
+    await clerkClient.users.verifyPassword({
+        userId:clerkUser.id,
+        password:password,
+    })
 
-    
-     await clerkClient.users.verifyPassword({
-       userId: clerkUser.id,
-       password: password,
-     });
-     console.log("Clerk User:", clerkUser);
+    //find if the user is also stored in the db
+    const mongoUser = await User.findOne({clerkUserId: clerkUser.id})
+    if(!mongoUser){
+        return res.status(404).json({msg:"User mot found in DB"})
+    }
 
-     // Find the user in MongoDB using Clerk's userId
-     const user = await User.findOne({ clerkUserId: clerkUser.id });
 
-     // If the user doesn't exist in MongoDB, return an error
-     if (!user) {
-       return res.status(404).json({ msg: "User not found in our database" });
-     }
+    //creating a session
 
-     // Clerk automatically manages the session, so no need to manually create it.
-     // Set session cookies
-     const session = await clerkClient.sessions.create({
-       userId: clerkUser.id,
-     });
+    const session = await clerkClient.sessions.create({
+        userId:clerkUser.id,
+    });
 
-     // Send session ID as cookie
-     res.cookie("SessionID", session.id, {
-       httpOnly: true,
-       sameSite: "Strict",
-       maxAge: 60 * 60 * 1000, // session expires after 1 hour
-     });
+    //setting cookies
 
-     // Respond with success
-     res.status(200).json({ msg: "You have successfully logged in" });
-   } catch (err) {
-   console.error("Full error object:", err);
-   console.error(`Error logging in: ${err.message}`);
-    res.status(401).json({ msg: "Invalid credentials" });
+    res.cookies("SessionID", session.id,{
+        httpOnly:true,
+        sameSite:"Strict",
+        maxAge:60*60*1000 // session expires after 1hr
+    })
+
+    res.status(200).json({msg:"You have successfully logged in"})
+  }catch(error){
+    console.error("Full error in object:",error)
+    console.error(`Error loggin in: ${error.message}`)
+    res.status(401).json({msg:"Invalid credentials"})
   }
 };
 
