@@ -17,7 +17,7 @@ const User = require("../models/user.js")
             const user = await User.findById(decodedToken.userId);
 
             if(!user){
-                res.status(404).json({msg:"User Not found"})
+                return res.status(404).json({msg:"User Not found"})
             }
             req.user = user
             req.userId=decodedToken.userId
