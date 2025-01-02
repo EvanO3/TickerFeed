@@ -2,123 +2,130 @@ const User = require("../models/user.js")
 const bcrypt = require("bcryptjs")
 const {checkSchema} = require("express-validator")
 const { userValidator } = require("../utils/userValidation.js")
+const blacklisted = require("../models/blacklist.js")
+const jwt = require("jsonwebtoken")
 
+const createUser = async (req, res) => {
+  //first check to see if the email already exits
+  const { firstname, lastname, email, password, date_of_birth } = req.body;
 
-const { clerkClient } = require("@clerk/express");
-//This controller route creates the user and hash's the password before storing into DB
-
-const createUser =  async (req, res)=>{
-    //first check to see if the email already exits
-    const {firstname,lastname, email, password, date_of_birth }= req.body;
-    
-    
-    try{
-        
-
-        const exisitingUser = await User.findOne({email})
-
-        if(exisitingUser){
-            return res.status(400).json({msg:"User already Exists"})
-        }
-        const newUser = await clerkClient.users.createUser({
-            firstname:firstname,
-            lastname:lastname,
-            emailAddress:[email],
-            password,
-            publicMetadata:{date_of_birth}
-        })
-
-            const user = new User({
-              clerkUserId: newUser.id, // Store Clerk's userId
-              firstname,
-              lastname,
-              email,
-              date_of_birth,
-            });
-        await user.save()
-res.status(201).send({ msg: "Thank you for registering with us!", userId: newUser.id });
-    }catch(error){
-         console.error(`Error creating user: ${error}`);
-         res.status(500).send({ msg: "Server Error" });
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      res.status(400).send({ msg: "User already exits with that email" });
     }
-}
-/**
- * LOGIN ROUTE NEEDS TO BE FIXED, LOGIN DOES NOT WORK
- */
+    //--------------------------------
+    // change salt value so it gets generated diff for each pass using bcrypt.genSalt
+    //--------------------------------
+    const hashedPashword = await bcrypt.hash(password, 10);
 
-const login = async (req,res, next)=>{
-    const {email, password} = req.body
-    
-  try{
-    const users = await clerkClient.users.getUserList({
-      emailAddress: email,
-    });
-    if(users.data|| users.data.length===0){
-        return res.status(404).json({msg:"User not found"})
-    }
-
-    const clerkUser =users.data[0];
-    const userEmail= clerkUser.emailAddresses[0]?.emailAddress;
-    console.log("User email:", userEmail)
-
-
-    await clerkClient.users.verifyPassword({
-        userId:clerkUser.id,
-        password:password,
-    })
-
-    //find if the user is also stored in the db
-    const mongoUser = await User.findOne({clerkUserId: clerkUser.id})
-    if(!mongoUser){
-        return res.status(404).json({msg:"User mot found in DB"})
-    }
-
-
-    //creating a session
-
-    const session = await clerkClient.sessions.create({
-        userId:clerkUser.id,
+    const newUser = new User({
+      firstname: firstname,
+      lastname: lastname,
+      email: email,
+      password: hashedPashword,
+      date_of_birth: date_of_birth,
     });
 
-    //setting cookies
-
-    res.cookies("SessionID", session.id,{
-        httpOnly:true,
-        sameSite:"Strict",
-        maxAge:60*60*1000 // session expires after 1hr
-    })
-
-    res.status(200).json({msg:"You have successfully logged in"})
-  }catch(error){
-    console.error("Full error in object:",error)
-    console.error(`Error loggin in: ${error.message}`)
-    res.status(401).json({msg:"Invalid credentials"})
+    await newUser.save();
+    res.status(201).send({ msg: "Thank You for Registering With Us" });
+  } catch (error) {
+    console.error(`Error: ${error}`);
+    res.status(500).send({ msg: "Server Error" });
   }
 };
 
+const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
 
-
-const logout = async (req,res)=>{
-    try{
-        
-        const accessToken =req.cookies.SessionID;
-        if(!accessToken){
-            res.status(204).send()
-        }
-        //when use logsout takes token away so they would have to reauthenticate
-        await clerkClient.sessions.revokeSession(accessToken);
-        res.clearCookie("SessionID",{
-            httpOnly:true,
-            sameSite:"Strict"
-        })
-
-        res.status(200).json({msg:"Successfully logged out"})
-    }catch(err){
-        console.error(`Error logged ${err}`)
-        res.status(500).json({msg:"Internal Server Error"})
+    //if the user does not exist then throw error
+    if (!user) {
+      return res.status(404).json({ msg: "Authentication failed" });
     }
-}
 
+    //comparing to see if they gave the correct pass
+    await bcrypt.compare(password, user.password, (err, result) => {
+      if (err) {
+        return res.status(401).json({ msg: "Invalid Credentials" });
+      }
+
+      if (result) {
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+          expiresIn: process.env.JWT_EXPIRY,
+        });
+
+        //cookie sets here
+        let options = {
+          maxAge: 60 * 60 * 1000, // this will keep the cookie alive for 20 mins
+          httpOnly: true, // the cookies is only accessable in the wbe
+          //use secure in production change this val
+          //secure:true,
+          sameSite: "Strict",
+        };
+        res.cookie("SessionID", token, options);
+        res.status(200).json({
+          msg: "you have been successfully logged in",
+        });
+      } else {
+        res.status(401).json({ msg: "Invalid Passowrd" });
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const accessToken = req.cookies.SessionID;
+
+    if (!accessToken) {
+      return res.sendStatus(204);
+    }
+    //check if the token has already expired
+    const decodedToken = jwt.decode(accessToken);
+    if (decodedToken && decodedToken.exp < Date.now() / 1000) {
+      return res
+        .status(204)
+        .json({ msg: "token has already expired, please re-login" });
+    }
+
+    //additional check to see if the token has been blacklisted
+
+    const checkIfBlackListed = await blacklisted.findOne({
+      token: accessToken,
+    });
+
+    if (checkIfBlackListed) {
+      return res.sendStatus(204);
+    }
+
+    //if the token isn't blacklisted then black list it
+    const newBlackList = new blacklisted({
+      token: accessToken,
+    });
+
+    await newBlackList.save();
+    res.setHeader("Clear-Site-Data", "cookies");
+    res.clearCookie("SessionID", {
+      httpOnly: true, // the cookies is only accessable in the wbe
+      //use secure in production change this val
+      //secure:true,
+      sameSite: "Strict",
+    });
+    res.sendStatus(200).json({
+      message: "Successfully Logged out",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: "Error",
+      message: "Internal Server Error",
+    });
+  }
+};
 
 
 
