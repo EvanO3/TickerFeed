@@ -4,12 +4,12 @@ const mongoose = require("mongoose")
 const bcrypt = require("bcryptjs")
 const userSchema = new mongoose.Schema(
   {
-    clerkUserId: { type: String, required: true, unique: true }, //links the id with the ID on clerk
+   
     firstname: { type: String, required: true, maxLength: 25 },
     lastname: { type: String, required: true, maxLength: 25 },
     email: { type: String, required: true, unique: true },
     //password length will be validated in utils
-   // password: { type: String, required: true },
+   password: { type: String, required: true },
     resumes: [
       {
         fileUri: String,
