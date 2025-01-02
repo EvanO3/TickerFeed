@@ -10,23 +10,24 @@ const resumeUpload = async(req,res)=>{
       if (!req.file) {
         return res.status(404).json({ msg: "No File being uploaded" });
       }
-      const userId = req.user.id;
+      const userId = req.userid;
+      console.log('User id',userId)
       const filePath = req.file.path;
    
-      let fileInformation = await uploadFiles(
-        process.env.Extracta_ai_API,
-        process.env.Extraction_ID,
-        [filePath]
-      );
+    //    let fileInformation = await uploadFiles(
+    //      process.env.Extracta_ai_API,
+    //      process.env.Extraction_ID,
+    //       [filePath]
+    //    );
 
-      console.log("Waiting for 60 seconds to allow for processing...")
+    //   console.log("Waiting for 60 seconds to allow for processing...")
 
-      await new Promise((resolve)=>setTimeout(resolve, 60000))
-      let usersInformation = await getBatchResults(
-        process.env.Extracta_ai_API,
-        process.env.Extraction_ID,
-        fileInformation.batchId
-      );
+    //    await new Promise((resolve)=>setTimeout(resolve, 60000))
+    //    let usersInformation = await getBatchResults(
+    //     process.env.Extracta_ai_API,
+    //     process.env.Extraction_ID,
+    //     fileInformation.batchId
+    //    );
 
 
 
