@@ -9,11 +9,7 @@ const { requireAuth } = require('@clerk/express')
 
 //post reques to handle router to uploading files
 
-router.post(
-  "/uploadResume",
-  //requireAuth(),
-  upload.single("file"),
-  resume.resumeUpload
+router.post("/uploadResume",auth.authenticate,upload.single("file"),resume.resumeUpload
 );
 
 module.exports=router
