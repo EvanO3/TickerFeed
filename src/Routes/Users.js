@@ -13,7 +13,7 @@ router.post("/login", checkSchema(loginValidation.loginValidation), handleValida
 router.get("/logout", userController.logout)
 
 //Clerk expects a front-end route for signin so change when front-end is made
-router.get("/homePage", requireAuth({ signInUrl:"/login"}), (req, res) => {
+router.get("/homePage", auth.authenticate, (req, res) => {
   res.send({ msg: `Welcome ${req.user.name}` });
 });
 module.exports=router;
