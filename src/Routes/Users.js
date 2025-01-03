@@ -7,7 +7,10 @@ const loginValidation = require("../utils/loginValidation.js")
 const handleValidation = require("../utils/handleValidationError.js")
 const auth = require("../utils/Auth.js")
 const passport = require("passport")
-const {localStategy} = require("../utils/local-strategy.js")
+ require("../utils/local-strategy.js");
+ require("../utils/jwt-strategy.js")
+
+
 router.post("/register", checkSchema(userValidator.userValidation),handleValidation.handleValidationError,userController.createUser);
 router.post(
   "/login",
@@ -19,7 +22,7 @@ router.post(
 router.get("/logout", userController.logout)
 
 //Clerk expects a front-end route for signin so change when front-end is made
-router.get("/homePage", auth.authenticate, (req, res) => {
-  res.send({ msg: `Welcome ${req.user.name}` });
+router.get("/homePage", passport.authenticate('jwt',{session:false}), (req, res) => {
+  res.send({ msg: `Welcome ${req.user.firstname}` });
 });
 module.exports=router;
