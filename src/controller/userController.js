@@ -37,22 +37,9 @@ const createUser = async (req, res) => {
 
 const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-
-    //if the user does not exist then throw error
-    if (!user) {
-      return res.status(404).json({ msg: "Authentication failed" });
-    }
-
+        const userId =req.user.id
     //comparing to see if they gave the correct pass
-    await bcrypt.compare(password, user.password, (err, result) => {
-      if (err) {
-        return res.status(401).json({ msg: "Invalid Credentials" });
-      }
-
-      if (result) {
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+        const token = jwt.sign({ userId: userId }, process.env.JWT_SECRET, {
           expiresIn: process.env.JWT_EXPIRY,
         });
 
@@ -60,7 +47,8 @@ const login = async (req, res, next) => {
         let options = {
           maxAge: 60 * 60 * 1000, // this will keep the cookie alive for 20 mins
           httpOnly: true, // the cookies is only accessable in the wbe
-          //use secure in production change this val
+          
+          //use secure in production uncomment this and leave to true
           //secure:true,
           sameSite: "Strict",
         };
@@ -68,11 +56,7 @@ const login = async (req, res, next) => {
         res.status(200).json({
           msg: "you have been successfully logged in",
         });
-      } else {
-        res.status(401).json({ msg: "Invalid Passowrd" });
-      }
-    });
-  } catch (err) {
+      }  catch (err) {
     next(err);
   }
 };
