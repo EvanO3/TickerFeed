@@ -5,7 +5,7 @@ const upload = require("../utils/multer.js")
 const User = require("../models/user.js")
 const auth = require("../utils/Auth.js")
 const resume = require("../controller/resumeController.js")
-const { requireAuth } = require('@clerk/express')
+
 
 //post reques to handle router to uploading files
 
