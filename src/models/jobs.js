@@ -8,6 +8,7 @@ const jobSchema = new mongoose.Schema({
   jobDescription: { type: String, required: true },
   responsibilities: [String],
   requiredQualifications: [String],
+  job_url:{type:String,required:true},
   datePosted: { type: Date, default: Date.now },
 });
   jobSchema.index({ jobTitle: 1, company: 1, location: 1 });
