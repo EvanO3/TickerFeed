@@ -10,39 +10,9 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     //password length will be validated in utils
    password: { type: String, required: true },
-    resumes: [
-      {
-        fileUri: String,
-        uploadedAt: { type: Date, default: Date.now() },
-      },
-    ],
-    education: [
-      {
-        description: String,
-        end_date: String,
-        institute: String,
-        location: String,
-        start_date: String,
-        title: String,
-      },
-    ],
-    skills: [String],
-    experience: [
-      {
-        company: String,
-        description: String,
-        end_date: String,
-        location: String,
-        start_date: String,
-        title: String,
-      },
-    ],
-    Languages: [String],
-    certificates: [String],
-    date_of_birth: { type: Date },
-    //add roles if payment is involved
-  },
-  { timestamps: true }
+   watchList:[{type:mongoose.Schema.Types.ObjectId, ref:'Stock' }],
+  timestamps: true,
+  }
 );
 
 
