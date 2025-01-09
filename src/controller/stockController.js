@@ -2,7 +2,7 @@ const axios = require("axios")
 const Stocks = require("../models/Stock")
 require("dotenv").config()
 const Bottleneck = require("bottleneck")
-const redis = require("../utils/redis")
+const redis = require("../utils/redis");
 
 const limiter = new Bottleneck({
   reservoir: 25,
@@ -29,6 +29,7 @@ const getStockInfo = async (req,res)=>{
     //checks to see if theres data on that stocksymbol, if so return it, if not then make api requests
      const cachedData = await redis.get(stockSymbol);
      if (cachedData) {
+        console.log(`Returned from redis ${cachedData}`)
        return res.status(200).json({ data: JSON.parse(cachedData) });
      }
 
@@ -85,7 +86,7 @@ console.log(priceResponse.data)
 
     );
 
- await redis.setex(stockSymbol, 300, JSON.stringify(StockData));
+ await redis.setEx(stockSymbol, 300, JSON.stringify(StockData));
 
     return res.status(200).json({data:stock})
       
@@ -113,17 +114,16 @@ console.log(priceResponse.data)
 //user/news-feed
 
 
-/***
- * Get Stock Info by Symbol
-Route: GET /api/stocks/
-Description: Retrieves information about a specific stock by its symbol (e.g., AAPL, TSLA).
-Parameters: stockSymbol (query parameter)
-Example: /api/stocks/?stockSymbol=AAPL
+/**
+ * 
+
 2. Get Stock News
 Route: GET /api/stocks/news
 Description: Retrieves the latest news for a specific stock symbol.
 Parameters: stockSymbol (query parameter)
 Example: /api/stocks/news?stockSymbol=AAPL
+
+
 3. Get Stock Historical Data
 Route: GET /api/stocks/history
 Description: Retrieves historical stock price data (e.g., daily, weekly, monthly).
