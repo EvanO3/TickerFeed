@@ -3,7 +3,7 @@ const router = Router();
 const stockController= require("../controller/stockController")
 const rateLimit = require("express-rate-limit");
  const slowDown =require("express-slow-down")
-//passport.authenticate('jwt',{session:false})
+const passport = require("passport")
 const limiter = rateLimit({
 
     windowMs:10*60*1000,
@@ -16,6 +16,6 @@ const slowLimiter = slowDown({
 });
 router.use(limiter)
 router.use(slowLimiter)
-router.get("/stocks/", stockController.getStockInfo);
+router.get("/stocks/", passport.authenticate('jwt', {session:false}), stockController.getStockInfo);
 
 module.exports=router;
