@@ -85,7 +85,7 @@ console.log(priceResponse.data)
 
     );
 
- redis.setex(stockSymbol, 300, JSON.stringify(StockData));
+ await redis.setex(stockSymbol, 300, JSON.stringify(StockData));
 
     return res.status(200).json({data:stock})
       
@@ -99,6 +99,75 @@ console.log(priceResponse.data)
   }
 }
 
+//User to be able to add a stock to their watch list
 
+//view stock news
+
+
+/**
+ * routes for the news controller
+ */
+//news/top-headlines (fetch top stock-related headlines).
+//news/search (search news by ticker symbol).
+//user/stocks (add/remove favorite stocks).
+//user/news-feed
+
+
+/***
+ * Get Stock Info by Symbol
+Route: GET /api/stocks/
+Description: Retrieves information about a specific stock by its symbol (e.g., AAPL, TSLA).
+Parameters: stockSymbol (query parameter)
+Example: /api/stocks/?stockSymbol=AAPL
+2. Get Stock News
+Route: GET /api/stocks/news
+Description: Retrieves the latest news for a specific stock symbol.
+Parameters: stockSymbol (query parameter)
+Example: /api/stocks/news?stockSymbol=AAPL
+3. Get Stock Historical Data
+Route: GET /api/stocks/history
+Description: Retrieves historical stock price data (e.g., daily, weekly, monthly).
+Parameters: stockSymbol, startDate, endDate (query parameters)
+Example: /api/stocks/history?stockSymbol=AAPL&startDate=2023-01-01&endDate=2023-12-31
+4. Get Market Summary
+Route: GET /api/stocks/market-summary
+Description: Retrieves a summary of the stock market, including indices like S&P 500, NASDAQ, etc.
+Example: /api/stocks/market-summary
+5. Get Stock Technical Indicators
+Route: GET /api/stocks/indicators
+Description: Retrieves technical indicators (e.g., RSI, MACD) for a specific stock symbol.
+Parameters: stockSymbol, indicator (query parameters)
+Example: /api/stocks/indicators?stockSymbol=AAPL&indicator=RSI
+6. Get Stock's Current Price
+Route: GET /api/stocks/price
+Description: Retrieves the current price of a specific stock symbol.
+Parameters: stockSymbol (query parameter)
+Example: /api/stocks/price?stockSymbol=AAPL
+7. Search for Stocks
+Route: GET /api/stocks/search
+Description: Search for stocks by company name or symbol.
+Parameters: query (query parameter, could be part of the stock symbol or company name)
+Example: /api/stocks/search?query=apple
+8. Add Stock to Watchlist
+Route: POST /api/stocks/watchlist
+Description: Adds a stock to the user's watchlist.
+Body: { stockSymbol: 'AAPL' }
+Example: POST /api/stocks/watchlist
+9. Get User's Watchlist
+Route: GET /api/stocks/watchlist
+Description: Retrieves all stocks on the user's watchlist.
+Example: /api/stocks/watchlist
+10. Remove Stock from Watchlist
+Route: DELETE /api/stocks/watchlist
+Description: Removes a stock from the user's watchlist.
+Body: { stockSymbol: 'AAPL' }
+Example: DELETE /api/stocks/watchlist
+11. Get Stock's Latest Dividend Data
+Route: GET /api/stocks/dividends
+Description: Retrieves dividend information for a specific stock symbol.
+Parameters: stockSymbol (query parameter)
+Example: /api/stocks/dividends?stockSymbol=AAPL
+12. Get Stock's Earnings Report
+ */
 module.exports = { getStockInfo };
 
