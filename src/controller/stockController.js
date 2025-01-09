@@ -18,6 +18,9 @@ const polygonlimiter = new Bottleneck({
   reservoirRefreshAmount: 5,
   minTime: 60000,
 });
+
+// when stock info gets returned add a way to also add news articles by using News.FindOne
+
 const getStockInfo = async (req,res)=>{
   try{
     //user must pass a stock into the query params in order to get the stock information
@@ -44,16 +47,6 @@ const getStockInfo = async (req,res)=>{
         )
       );
 
-    const newsResponse = await polygonlimiter.schedule(()=>axios.get(
-        `https://api.polygon.io/v2/reference/news?ticker=${stockSymbol}&limit=5`,
-        {
-            params:{
-                apikey:process.env.polygon_key
-            }
-        }
-));
-
-
 const priceResponse = await limiter.schedule(()=> axios.get(`https://www.alphavantage.co/query?`, {
   params: {
     function: "GLOBAL_QUOTE",
@@ -70,13 +63,7 @@ console.log(priceResponse.data)
       industry: "",
       marketCap: stockResponse.data.results.market_cap,
       price: priceResponse.data['Global Quote']['05. price'], // price will be set using vantage api
-      newsArticles: newsResponse.data.results.map((article) => ({
-        title: article.title,
-        description: article.description,
-        author: article.author,
-        url: article.article_url,
-        publishedAt: new Date(article.published_utc),
-      })),
+     
     };
 
     const stock = await Stocks.findOneAndUpdate(
@@ -85,6 +72,8 @@ console.log(priceResponse.data)
         {new:true,upsert:true}
 
     );
+  
+
 
  await redis.setEx(stockSymbol, 300, JSON.stringify(StockData));
 
