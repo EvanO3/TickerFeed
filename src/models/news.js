@@ -10,7 +10,7 @@ const newsSchema = new mongoose.Schema({
     },
   ],
 });
-newsSchema.index({ tickerSymbol: 1, publishedAt: -1 }); //for faster indexing
+newsSchema.index({ tickerSymbol: 1, publishedAt: -1 }); //for faster
 const News = mongoose.model('News',newsSchema)
 
 
