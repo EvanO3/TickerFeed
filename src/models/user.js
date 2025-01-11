@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
     },
     //password length will be validated in utils
     password: { type: String, required: true },
-    watchList: [{ type: mongoose.Schema.Types.ObjectId, ref: "Stock" }],
+    watchList: [{ type: mongoose.Schema.Types.ObjectId, ref: "Stock", unique: true}],
   },
   { timestamps: true }
 );
