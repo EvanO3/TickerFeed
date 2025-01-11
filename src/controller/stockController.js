@@ -3,7 +3,7 @@ const Stocks = require("../models/Stock")
 require("dotenv").config()
 const Bottleneck = require("bottleneck")
 const redis = require("../utils/redis");
-
+const User = require("../models/user")
 const limiter = new Bottleneck({
   reservoir: 25,
   reservoirRefreshInterval: 3600000,
@@ -90,27 +90,62 @@ console.log(priceResponse.data)
 }
 
 //User to be able to add a stock to their watch list
+const addToWatchList = async(req,res)=>{
+    // check if they gave a stock in their req
+    const {stockSymbol} = req.body
+    const userId= req.user._id
 
-//view stock news
+   try{
+       if(!stockSymbol){
+           return res.status(400).json({msg:"Stock symbol required"})
+       }
+
+       const stockData = await Stocks.findOne({tickerSymbol:stockSymbol})
+ 
+       if(!stockData){
+        return res.status(400).json({msg:"Stock Symbol not available"})
+       }
+       //if a stock symbol was provided
+
+  await User.updateOne(
+         { _id: userId },
+         { $addToSet: {watchList: stockData._id } }
+       );
+
+           
+       return res.status(200).json({msg:`Stock ${stockSymbol} added to watchList`})
+   }catch(err){
+    console.log(`Error has occurred ${err}`)
+   }
+   
+  
+}
+
+const getWatchList= async (req,res)=>{
+    const userId = req.user._id;
+
+    try{
+        const UserwatchList = await User.findById({_id:userId}).populate('watchList')
+       return res.status(200).json({ watchList: UserwatchList.watchList });
+    }catch(err){
+       console.log(`Error has occurred ${err}`)
+       return res.status(500).json({msg:"Internal server error"})
+    }
+}
 
 
-/**
- * routes for the news controller
- */
-//news/top-headlines (fetch top stock-related headlines).
-//news/search (search news by ticker symbol).
-//user/stocks (add/remove favorite stocks).
-//user/news-feed
+// 10. Remove Stock from Watchlist
+// Route: DELETE /api/stocks/watchlist
+// Description: Removes a stock from the user's watchlist.
+// Body: { stockSymbol: 'AAPL' }
+// Example: DELETE /api/stocks/watchlist
+
 
 
 /**
  * 
-
-2. Get Stock News
-Route: GET /api/stocks/news
-Description: Retrieves the latest news for a specific stock symbol.
-Parameters: stockSymbol (query parameter)
-Example: /api/stocks/news?stockSymbol=AAPL
+ 
+ 
 
 
 3. Get Stock Historical Data
@@ -118,45 +153,43 @@ Route: GET /api/stocks/history
 Description: Retrieves historical stock price data (e.g., daily, weekly, monthly).
 Parameters: stockSymbol, startDate, endDate (query parameters)
 Example: /api/stocks/history?stockSymbol=AAPL&startDate=2023-01-01&endDate=2023-12-31
+
 4. Get Market Summary
 Route: GET /api/stocks/market-summary
 Description: Retrieves a summary of the stock market, including indices like S&P 500, NASDAQ, etc.
 Example: /api/stocks/market-summary
+
 5. Get Stock Technical Indicators
 Route: GET /api/stocks/indicators
 Description: Retrieves technical indicators (e.g., RSI, MACD) for a specific stock symbol.
 Parameters: stockSymbol, indicator (query parameters)
 Example: /api/stocks/indicators?stockSymbol=AAPL&indicator=RSI
+
 6. Get Stock's Current Price
 Route: GET /api/stocks/price
 Description: Retrieves the current price of a specific stock symbol.
 Parameters: stockSymbol (query parameter)
 Example: /api/stocks/price?stockSymbol=AAPL
+
 7. Search for Stocks
 Route: GET /api/stocks/search
 Description: Search for stocks by company name or symbol.
 Parameters: query (query parameter, could be part of the stock symbol or company name)
 Example: /api/stocks/search?query=apple
-8. Add Stock to Watchlist
-Route: POST /api/stocks/watchlist
-Description: Adds a stock to the user's watchlist.
-Body: { stockSymbol: 'AAPL' }
-Example: POST /api/stocks/watchlist
-9. Get User's Watchlist
-Route: GET /api/stocks/watchlist
-Description: Retrieves all stocks on the user's watchlist.
-Example: /api/stocks/watchlist
-10. Remove Stock from Watchlist
-Route: DELETE /api/stocks/watchlist
-Description: Removes a stock from the user's watchlist.
-Body: { stockSymbol: 'AAPL' }
-Example: DELETE /api/stocks/watchlist
+
+
+
+
+
+
+
 11. Get Stock's Latest Dividend Data
 Route: GET /api/stocks/dividends
 Description: Retrieves dividend information for a specific stock symbol.
 Parameters: stockSymbol (query parameter)
 Example: /api/stocks/dividends?stockSymbol=AAPL
+
 12. Get Stock's Earnings Report
  */
-module.exports = { getStockInfo };
+module.exports = { getStockInfo, addToWatchList, getWatchList };
 
