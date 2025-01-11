@@ -1,7 +1,8 @@
 const mongoose = require("mongoose")
 const newsSchema = new mongoose.Schema({
+ tickerSymbol: { type: String,required: true,trim: true, uppercase: true},
   newsArticles: [
-    { tickerSymbol: { type: String,required: true,trim: true, uppercase: true},
+    {
       title: { type: String, trim: true },
       description: { type: String, trim: true },
       author: { type: String, trim: true },
