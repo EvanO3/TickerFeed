@@ -19,4 +19,7 @@ router.use(slowLimiter)
 router.get("/stocks", passport.authenticate('jwt', {session:false}), stockController.getStockInfo);
 router.post("/stocks/addWatchList", passport.authenticate('jwt', {session:false}), stockController.addToWatchList)
 router.get("/stocks/watchlist", passport.authenticate('jwt', {session:false}), stockController.getWatchList);
+router.get("/stocks/earnings", passport.authenticate('jwt', {session:false}), stockController.getEarningReports);
+router.delete("/stocks/remove/watchlist", passport.authenticate('jwt', {session:false}), stockController.removeFromWatchList);
+router.get("/stocks/price", passport.authenticate('jwt', {session:false}), stockController.getCurrentPrice)
 module.exports=router;
