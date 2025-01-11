@@ -16,6 +16,7 @@ const slowLimiter = slowDown({
 });
 router.use(limiter)
 router.use(slowLimiter)
-router.get("/stocks/", passport.authenticate('jwt', {session:false}), stockController.getStockInfo);
-
+router.get("/stocks", passport.authenticate('jwt', {session:false}), stockController.getStockInfo);
+router.post("/stocks/addWatchList", passport.authenticate('jwt', {session:false}), stockController.addToWatchList)
+router.get("/stocks/watchlist", passport.authenticate('jwt', {session:false}), stockController.getWatchList);
 module.exports=router;
