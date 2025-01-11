@@ -134,13 +134,93 @@ const getWatchList= async (req,res)=>{
 }
 
 
-// 10. Remove Stock from Watchlist
-// Route: DELETE /api/stocks/watchlist
-// Description: Removes a stock from the user's watchlist.
-// Body: { stockSymbol: 'AAPL' }
-// Example: DELETE /api/stocks/watchlist
+const removeFromWatchList= async(req, res)=>{
+    const userId = req.user._id
+    const {stockSymbol}= req.body
+
+    if(!stockSymbol){
+       return res.status(400).json({msg:"No Ticker symbol provided"})
+    }
+
+    try{
+            const stock_id = await Stocks.findOne({tickerSymbol:stockSymbol})
+            console.log(stock_id._id)
+            const Userwatchlist = await User.findByIdAndUpdate(
+              { _id: userId },
+              { $pull: { watchList: stock_id._id } }
+            );
+            return res.status(200).json({ data: Userwatchlist.watchList});
+
+           
+    }catch(error){
+        console.log(`Error found ${error}`)
+        return res.status(500).json({msg:"Internal server error"})
+    }
+}
 
 
+const getEarningReports= async(req,res)=>{
+    try{
+        const {stockSymbol} = req.query
+        if(!stockSymbol){
+            return res.status(400).json({msg:"Ticker symbol not provided"})
+        }
+
+        const cachedData = await redis.get(`Earnings:${stockSymbol}`);
+        if(cachedData){
+            console.log(`Sending cached data ${cachedData}`)
+
+            return res.status(200).json({data: JSON.parse(cachedData)})
+        }
+
+        const response = await limiter.schedule(()=> axios.get(`https://www.alphavantage.co/query?`, {
+          params: {
+            function: "EARNINGS",
+            symbol:stockSymbol,
+            apikey: process.env.vantage_api_key,
+          },
+        }));
+
+
+        const stockEarnings = response.data.quarterlyEarnings
+        console.log(stockEarnings)
+        await redis.setEx(`Earnings:${stockSymbol}`, 300, JSON.stringify(stockEarnings));
+        // console.log(response.data)
+        return res.status(200).json({ data: stockEarnings });
+    }catch(error){
+        console.log(`Error found ${error}`)
+        return res.status(500).json({msg:"Internal Server Error"})
+    }
+}
+
+
+const getCurrentPrice = async (req,res)=>{
+    const {stockSymbol}=req.query
+    if(!stockSymbol){
+       return res.status(400).json({msg:"Stock Symbol Required"})
+    }
+
+    const cachedData = await redis.get(`StockPrice:${stockSymbol}`);
+    if(cachedData){
+       return res.status(200).json({data:cachedData})
+    }
+    try{
+            const stock = await Stocks.findOne({tickerSymbol:stockSymbol})
+
+            if(!stock){
+                res.status(400).json({ msg: `Stock ${stockSymbol} not found` });
+            }
+            const stockPrice = stock.price
+
+            await redis.setEx(`StockPrice:${stockSymbol}`, 300, JSON.stringify(stockPrice));
+          return res
+            .status(200)
+            .json({ stockSymbol, currentPrice: stockPrice });
+    }catch(error){
+        console.log('Error :', error)
+       return res.status(500).json({msg:"Internal server error"})
+    }
+}
 
 /**
  * 
@@ -178,18 +258,21 @@ Parameters: query (query parameter, could be part of the stock symbol or company
 Example: /api/stocks/search?query=apple
 
 
-
-
-
-
-
 11. Get Stock's Latest Dividend Data
 Route: GET /api/stocks/dividends
 Description: Retrieves dividend information for a specific stock symbol.
 Parameters: stockSymbol (query parameter)
 Example: /api/stocks/dividends?stockSymbol=AAPL
 
-12. Get Stock's Earnings Report
+
+
  */
-module.exports = { getStockInfo, addToWatchList, getWatchList };
+module.exports = {
+  getStockInfo,
+  addToWatchList,
+  getWatchList,
+  removeFromWatchList,
+  getEarningReports,
+  getCurrentPrice,
+};
 
