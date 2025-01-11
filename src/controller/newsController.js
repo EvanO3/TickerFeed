@@ -72,5 +72,17 @@ try{
 
 
 
+    //view stock news
+
+
+/**
+ * routes for the news controller
+ */
+//news/top-headlines (fetch top stock-related headlines).
+//news/search (search news by ticker symbol).
+//user/stocks (add/remove favorite stocks).
+//user/news-feed
+
+
 
 module.exports = {getStockNew};
