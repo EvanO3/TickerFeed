@@ -16,11 +16,11 @@ const app = express();
  * max: the max amount of requests before the limit applies
 **/
 
-const limiter = rateLimit({
+// const limiter = rateLimit({
 
-    windowMs:10*60*1000,
-    max:20
-})
+//     windowMs:10*60*1000,
+//     max:20
+// })
 
 /**
  * This will slow down requests after 3 requests to the endpoint have been made, to slow the load on the server
@@ -29,16 +29,16 @@ const limiter = rateLimit({
  * delayMS:sepcifies how long the delay will be in Ms
  
 **/
-const speedLimiter = slowDown({
-    windowMs:10*60*1000,
-    delayAfter:3,
-    delayMs:()=>2000
-})
+// const speedLimiter = slowDown({
+//     windowMs:10*60*1000,
+//     delayAfter:3,
+//     delayMs:()=>2000
+// })
 // middleware to allow parsing json bodies
 app.use(express.json())
 app.use(cookieParser());
-app.use(limiter)
-app.use(speedLimiter)
+// app.use(limiter)
+// app.use(speedLimiter)
 app.use(routes)
 //for cookies
 
