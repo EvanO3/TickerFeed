@@ -22,7 +22,7 @@ try{
     const cachedData = await redis.get(stockSymbol)
     if(cachedData){
         console.log("Sending cached data")
-        return res.status(200).json({data:cachedData})
+        return res.status(200).json({data:JSON.parse(cachedData)})
     }
 
     const newsResponse = await polygonlimiter.schedule(() =>
@@ -37,7 +37,6 @@ try{
     );
 
     const newsArticles = newsResponse.data.results.map((article)=>({
-        tickerSymbol:stockSymbol,
         title:article.title,
         description:article.description,
         author:article.author,
@@ -46,16 +45,16 @@ try{
 
     }));
 
+    await News.findOneAndUpdate(
+  { tickerSymbol: stockSymbol },
+  { newsArticles: newsArticles },
+  { upsert: true, new: true }
+);
+    
+
     // await News.insertMany(newsArticles,{ordered:false})
 
-      const news = await News.updateOne(
-        { "newsArticles.tickerSymbol": stockSymbol },
-        {
-          $push: { newsArticles: { $each: newsArticles } },
-          $setOnInsert: { newsArticles: [] },
-        },
-        { upsert: true }
-      );
+      
   
      await redis.setEx(stockSymbol, 300, JSON.stringify(newsArticles));
 
