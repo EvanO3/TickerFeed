@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 
 const stockSchema = new mongoose.Schema({
-  tickerSymbol: { type: String, required: true },
+  tickerSymbol: { type: String, required: true, uppercase:true},
   companyName: { type: String, required: true },
   sector: { type: String, required: true },
   industry: { type: String, required: true },
