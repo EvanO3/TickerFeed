@@ -22,4 +22,7 @@ router.get("/stocks/watchlist", passport.authenticate('jwt', {session:false}), s
 router.get("/stocks/earnings", passport.authenticate('jwt', {session:false}), stockController.getEarningReports);
 router.delete("/stocks/remove/watchlist", passport.authenticate('jwt', {session:false}), stockController.removeFromWatchList);
 router.get("/stocks/price", passport.authenticate('jwt', {session:false}), stockController.getCurrentPrice)
+router.get("/stockS/history", stockController.getStockHistory)
+//  stockSymbol, startDate, endDate (query parameters)
+// Example: /api/stocks/history?stockSymbol=AAPL&startDate=2023-01-01&endDate=2023-12-31
 module.exports=router;
