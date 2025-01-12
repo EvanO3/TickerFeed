@@ -27,7 +27,7 @@ try{
 
     const newsResponse = await polygonlimiter.schedule(() =>
       axios.get(
-        `https://api.polygon.io/v2/reference/news?ticker=${stockSymbol}&limit=5`,
+        `https://api.polygon.io/v2/reference/news?ticker=${stockSymbol}&limit=10`,
         {
           params: {
             apikey: process.env.polygon_key,
@@ -71,17 +71,6 @@ try{
 
 
 
-
-    //view stock news
-
-
-/**
- * routes for the news controller
- */
-//news/top-headlines (fetch top stock-related headlines).
-//news/search (search news by ticker symbol).
-//user/stocks (add/remove favorite stocks).
-//user/news-feed
 
 
 
