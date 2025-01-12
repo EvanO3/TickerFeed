@@ -222,6 +222,56 @@ const getCurrentPrice = async (req,res)=>{
     }
 }
 
+
+
+const getStockHistory = async (req,res)=>{
+    const {stockSymbol, startDate, endDate} = req.query
+
+    try{
+        if(!stockSymbol){
+            return res.status(400).json({msg:"Missing stock symbol"})
+        }
+    
+         const response = await limiter.schedule(() =>
+           axios.get("https://www.alphavantage.co/query?", {
+             params: {
+               function: "TIME_SERIES_DAILY",
+               symbol: stockSymbol,
+               apikey: process.env.vantage_api_key,
+             },
+           })
+         );
+    
+         const timeSeries = response.data["Time Series (Daily)"];
+    
+        if(startDate && endDate){
+            const start= new Date(startDate)
+            const end = new Date(endDate)
+    
+            //filter data by date range
+    
+            const filteredData = Object.keys(timeSeries)
+            .filter(date=>{
+                const currentDate = new Date(date);
+                return currentDate >= start && currentDate <= end
+            })
+            .reduce((result,date)=>{
+                result[date]=timeSeries[date];
+                return result;
+            },{})
+    
+            
+            return res.status(200).json({data:filteredData})   
+        }
+    
+        return res.status(200).json({data:timeSeries})
+
+    }catch(err){
+        console.log(`Error occured ${err}`)
+        return res.status(500).json({msg:"Internal server error"})
+    }
+}
+
 /**
  * 
  
@@ -274,5 +324,6 @@ module.exports = {
   removeFromWatchList,
   getEarningReports,
   getCurrentPrice,
+  getStockHistory,
 };
 
