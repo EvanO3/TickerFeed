@@ -232,6 +232,11 @@ const getStockHistory = async (req,res)=>{
             return res.status(400).json({msg:"Missing stock symbol"})
         }
     
+       const  cachedData = await redis.get(`StockHistory:${stockSymbol}`);
+       if(cachedData){
+        console.log('sending cached data')
+        return res.status(200).json({data:cachedData})
+       }
          const response = await limiter.schedule(() =>
            axios.get("https://www.alphavantage.co/query?", {
              params: {
@@ -261,8 +266,14 @@ const getStockHistory = async (req,res)=>{
             },{})
     
             
+            await redis.setEx(`StockHistory:${stockSymbol}`, 300, JSON.stringify(filteredData))
             return res.status(200).json({data:filteredData})   
         }
+         await redis.setEx(
+           `StockHistory:${stockSymbol}`,
+           300,
+           JSON.stringify(timeSeries)
+         );
     
         return res.status(200).json({data:timeSeries})
 
@@ -277,13 +288,6 @@ const getStockHistory = async (req,res)=>{
  
  
 
-
-3. Get Stock Historical Data
-Route: GET /api/stocks/history
-Description: Retrieves historical stock price data (e.g., daily, weekly, monthly).
-Parameters: stockSymbol, startDate, endDate (query parameters)
-Example: /api/stocks/history?stockSymbol=AAPL&startDate=2023-01-01&endDate=2023-12-31
-
 4. Get Market Summary
 Route: GET /api/stocks/market-summary
 Description: Retrieves a summary of the stock market, including indices like S&P 500, NASDAQ, etc.
@@ -295,17 +299,9 @@ Description: Retrieves technical indicators (e.g., RSI, MACD) for a specific sto
 Parameters: stockSymbol, indicator (query parameters)
 Example: /api/stocks/indicators?stockSymbol=AAPL&indicator=RSI
 
-6. Get Stock's Current Price
-Route: GET /api/stocks/price
-Description: Retrieves the current price of a specific stock symbol.
-Parameters: stockSymbol (query parameter)
-Example: /api/stocks/price?stockSymbol=AAPL
 
-7. Search for Stocks
-Route: GET /api/stocks/search
-Description: Search for stocks by company name or symbol.
-Parameters: query (query parameter, could be part of the stock symbol or company name)
-Example: /api/stocks/search?query=apple
+
+
 
 
 11. Get Stock's Latest Dividend Data
