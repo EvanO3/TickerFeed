@@ -49,7 +49,7 @@ const login = async (req, res, next) => {
           httpOnly: true, // the cookies is only accessable in the wbe
           
           //use secure in production uncomment this and leave to true
-          //secure:true,
+          secure:true,
           sameSite: "Strict",
         };
         res.cookie("SessionID", token, options);
@@ -96,7 +96,7 @@ const logout = async (req, res) => {
     res.clearCookie("SessionID", {
       httpOnly: true, // the cookies is only accessable in the wbe
       //use secure in production change this val
-      //secure:true,
+      secure:true,
       sameSite: "Strict",
     });
     res.sendStatus(200).json({
