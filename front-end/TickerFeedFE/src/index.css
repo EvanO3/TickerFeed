@@ -1,9 +1,4 @@
+/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* ... */
-.Form{
-    display:flex;
-    flex-direction:column
-}
