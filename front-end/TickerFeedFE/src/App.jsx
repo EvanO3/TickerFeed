@@ -7,8 +7,7 @@ function App() {
   return (
     <>
    <Form
-   FormType ="Sign Up"
-   underForm="If you already have an account"
+
    />
     </>
   )
