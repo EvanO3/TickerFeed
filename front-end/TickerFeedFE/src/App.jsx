@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import './App.css'
-import Form from "./components/auth"
+import SignUp from "./pages/SignUp"
+import SignIn from "./pages/SignIn";
+import {BrowserRouter, Routes, Route} from "react-router-dom"
 function App() {
 
 
   return (
-    <>
-   <Form
-
-   />
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/Signup" element={<SignUp />} />
+        <Route path="/Signin" element={<SignIn />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App

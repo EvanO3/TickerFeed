@@ -1,9 +1,9 @@
 import React from 'react'
 import Auth from "../components/auth"
-function SignUp() {
+function SignIn() {
   return (
-  <Auth type='signup'/>
+      <Auth type='signin'/>
   )
 }
 
-export default SignUp
+export default SignIn

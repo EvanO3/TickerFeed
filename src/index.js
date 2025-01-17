@@ -49,7 +49,9 @@ app.use(routes)
 //this string will connect to the mongoDB, if error occurs it logs it
 connectDB();
 
-
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
 
 //for production change the OR
 const PORT = process.env.PORT || ""

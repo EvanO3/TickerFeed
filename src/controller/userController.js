@@ -24,6 +24,7 @@ const createUser = async (req, res) => {
       lastname: lastname,
       email: email,
       password: hashedPashword,
+      watchList:[],
     });
 
     await newUser.save();
