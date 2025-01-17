@@ -7,12 +7,12 @@ const jwt = require("jsonwebtoken")
 
 const createUser = async (req, res) => {
   //first check to see if the email already exits
-  const { firstname, lastname, email, password, date_of_birth } = req.body;
+  const { firstname, lastname, email, password } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      res.status(400).send({ msg: "User already exits with that email" });
+      return res.status(400).send({ msg: "User already exits with that email" });
     }
     //--------------------------------
     // change salt value so it gets generated diff for each pass using bcrypt.genSalt
@@ -24,14 +24,16 @@ const createUser = async (req, res) => {
       lastname: lastname,
       email: email,
       password: hashedPashword,
-      date_of_birth: date_of_birth,
     });
 
     await newUser.save();
     res.status(201).send({ msg: "Thank You for Registering With Us" });
   } catch (error) {
-    console.error(`Error: ${error}`);
-    res.status(500).send({ msg: "Server Error" });
+    console.error("User creation error:", {
+      message: error.message,
+      stack: error.stack,
+    });
+    return res.status(500).json({ msg: "Server Error", error: error.message });
   }
 };
 
