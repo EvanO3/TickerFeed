@@ -1,11 +1,15 @@
 import React from 'react'
 import "../index.css"
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Nav from "../components/nav"
 import PropTypes from "prop-types";
 const BackendURL = process.env.REACT_APP_BackendURL;
 
-const handleSignIn = async (formInputs)=>{
+
+
+
+const handleSignIn = async (formInputs, navigate)=>{
     try{
       const response = await fetch(`${BackendURL}/api/login`, {
         method: "POST",
@@ -17,7 +21,7 @@ const handleSignIn = async (formInputs)=>{
       
       if(response.ok){
         const result =await response.json()
-        console.log('Success: ', result)
+        navigate("/home")
       }else{
         const errorText = await response.text(); 
         console.log("Error:", errorText);
@@ -27,12 +31,13 @@ const handleSignIn = async (formInputs)=>{
     }
   }
 
-const handleSignUp=async(formInputs)=>{
+const handleSignUp=async(formInputs,navigate)=>{
+  
   console.log("sending data:", formInputs)
     try{
       console.log("sending signup")
       const response = await fetch(
-        `http://localhost:3000/api/register`,
+        `${BackendURL}/api/register`,
         {
           method: "POST",
           headers: {
@@ -44,7 +49,7 @@ const handleSignUp=async(formInputs)=>{
       
       if(response.ok){
         const result =await response.json()
-        console.log('Success: ', result)
+        navigate("/signin");
       }else{
         const errorText = await response.text();
         console.log("Error:", errorText)
@@ -55,6 +60,7 @@ const handleSignUp=async(formInputs)=>{
 }
 
 function auth({type}) {
+  const navigate = useNavigate();
 const [formData, setFormData] = useState({
   firstname: "",
   lastname: "",
@@ -79,11 +85,11 @@ const handleSubmit= async (e)=>{
   
   if(type==='signin'){
      const { email, password} = formData;
-  if (email || password) {
+  if (!email || !password) {
     alert("Please fill in all required fields.");
     return;
   }
-   await  handleSignIn({email, password });
+   await  handleSignIn({email, password }, navigate);
  
   }
 else if(type === 'signup'){
@@ -97,13 +103,14 @@ if (
   alert("Please fill in all required fields.");
   return;
 }
-  await handleSignUp({firstname, lastname, email, password});
+  await handleSignUp({firstname, lastname, email, password}, navigate)
 }
 setFormData({firstname:"",lastname:"", email:"", password:""})
 
   //once form is created switch this to post req to backend
 
 }
+
   return (
     <>
       <Nav />
