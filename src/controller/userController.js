@@ -52,7 +52,7 @@ const login = async (req, res, next) => {
           httpOnly: true, // the cookies is only accessable in the wbe
           
           //use secure in production uncomment this and leave to true
-          secure:true,
+          // secure:true,
           sameSite: "Strict",
         };
         res.cookie("SessionID", token, options);
@@ -115,11 +115,22 @@ const logout = async (req, res) => {
 };
 
 
+const Authenticated =(req,res)=>{
+if(req.isAuthenticated()){
+  return res.status(200).json({authenticated:true, user:req.user})
+}
+else{
+  res.status(401).json({authenticated:false})
+}
+}
+
+
 
 
 
 module.exports = {
   createUser,
   login,
-  logout
+  logout,
+  Authenticated,
 };
