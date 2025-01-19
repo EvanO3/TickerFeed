@@ -3,18 +3,23 @@ import './App.css'
 import SignUp from "./pages/SignUp"
 import SignIn from "./pages/SignIn";
 import HomePage from "./pages/homePage"
-import {BrowserRouter, Routes, Route} from "react-router-dom"
+import ProtectedRoute from "./components/protectedRoutes";
+import {BrowserRouter as Router, Routes, Route} from "react-router-dom"
 function App() {
 
 
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
         <Route path="/Signup" element={<SignUp />} />
-        <Route path="/Signin" element={<SignIn />} />
-        <Route path="/home" element={<HomePage/>}/>
+        <Route path="/login" element={<SignIn />} />
+        <Route
+        path="/home"
+        element={<ProtectedRoute element={<HomePage/>} />}
+        />
+
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 
