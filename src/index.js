@@ -9,7 +9,7 @@ const cors = require("cors")
 
 
 const app = express();
-app.set('trust proxy', 1); // trust first proxy
+// app.set('trust proxy', 1); // trust first proxy
 
 //Before moving to prod, change the limtor here to 20 and then the more expensive ones like external api calls
 //limit to 6 in the router
@@ -43,7 +43,7 @@ app.use(express.json())
 app.use(cookieParser());
 app.use(
   cors({
-    orgin: process.env.front_end_url,
+    origin: process.env.front_end_url,
     credentials: true,
   })
 );
