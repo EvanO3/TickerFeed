@@ -48,12 +48,13 @@ const login = async (req, res, next) => {
 
         //cookie sets here
         let options = {
-          maxAge: 60 * 60 * 1000, // this will keep the cookie alive for 20 mins
+          maxAge: 60 * 60 * 1000,
           httpOnly: true, // the cookies is only accessable in the wbe
-          
+
           //use secure in production uncomment this and leave to true
-          // secure:true,
-          sameSite: "Strict",
+          secure:false,
+          sameSite: "Lax",
+        
         };
         res.cookie("SessionID", token, options);
         res.status(200).json({
@@ -100,7 +101,7 @@ const logout = async (req, res) => {
       httpOnly: true, // the cookies is only accessable in the wbe
       //use secure in production change this val
       secure:true,
-      sameSite: "Strict",
+      sameSite: "None",
     });
     res.sendStatus(200).json({
       message: "Successfully Logged out",
