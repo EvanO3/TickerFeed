@@ -16,12 +16,14 @@ const handleSignIn = async (formInputs, navigate)=>{
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(formInputs),
       });
       
       if(response.ok){
         const result =await response.json()
-        navigate("/home")
+        console.log("Going to home page, login good")
+        navigate("/home");
       }else{
         const errorText = await response.text(); 
         console.log("Error:", errorText);
@@ -191,6 +193,25 @@ setFormData({firstname:"",lastname:"", email:"", password:""})
       </div>
     </>
   );
+}
+
+//checks to see if the user is actually authenticated after login
+const checkAuth = async ()=>{
+  try{
+    const response = fetch(`${BackendURL}/api/check/auth`,{
+      credentials:"include" // this will ensure cookies are sent aswell
+    })
+
+    if(response.ok){
+      return true;
+    }else{
+      return false;
+    }
+
+  }catch(err){
+    console.error("Error occured: ",err)
+     return false;
+  }
 }
 auth.propTypes = {
   type: PropTypes.oneOf(["signin", "signup"]).isRequired,
