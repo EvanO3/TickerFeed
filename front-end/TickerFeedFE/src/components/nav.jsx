@@ -1,7 +1,18 @@
 import React from 'react'
 import "../index.css"
 import { AiOutlineStock } from "react-icons/ai";
+import { useNavigate } from 'react-router-dom';
+
 function nav() {
+  const navigate = useNavigate()
+  
+  const goToLogin=()=>{
+    navigate("/login")
+  }
+
+  const goToSignUp=()=>{
+     navigate("/signup");
+  }
   return (
     <nav className="nav-bar">
       <div className="logo-container">
@@ -18,15 +29,13 @@ function nav() {
         <span className="company-name">TickerFeed</span>
       </div>
 
-
       <div className="auth-buttons">
-        <button className="button signIn">SignUp</button>
-        <button className="button signUp">Sign In</button>
+        <button className="button signIn" onClick={goToLogin}>
+          Sign In
+        </button>
+        <button className="button signUp" onClick={goToSignUp}>Sign Up</button>
       </div>
     </nav>
-
-
-
   );
 }
 
