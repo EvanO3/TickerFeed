@@ -47,8 +47,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(limiter)
-app.use(speedLimiter)
+// app.use(limiter)
+// app.use(speedLimiter)
 app.use(routes)
 //for cookies
 
