@@ -51,7 +51,7 @@ const handleSignUp=async(formInputs,navigate)=>{
       
       if(response.ok){
         const result =await response.json()
-        navigate("/signin");
+        navigate("/login");
       }else{
         const errorText = await response.text();
         console.log("Error:", errorText)
