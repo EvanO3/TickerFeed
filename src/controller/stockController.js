@@ -89,6 +89,10 @@ console.log(priceResponse.data)
   }
 }
 
+
+
+
+
 //User to be able to add a stock to their watch list
 const addToWatchList = async(req,res)=>{
     // check if they gave a stock in their req
