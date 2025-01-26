@@ -6,18 +6,17 @@ import HomePage from "./pages/homePage"
 import ProtectedRoute from "./components/protectedRoutes";
 import {BrowserRouter as Router, Routes, Route} from "react-router-dom"
 function App() {
-
+  //{<ProtectedRoute element={<HomePage/>}
 
   return (
     <Router>
       <Routes>
-        <Route path="/Signup" element={<SignUp />} />
+        <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<SignIn />} />
         <Route
-        path="/home"
-        element={<ProtectedRoute element={<HomePage/>} />}
+          path="/home"
+           element={<ProtectedRoute element={<HomePage/>}/>}
         />
-
       </Routes>
     </Router>
   );

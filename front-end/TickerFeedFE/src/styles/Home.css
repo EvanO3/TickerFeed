@@ -1,0 +1,175 @@
+.home-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .search-bar {
+    display: flex;
+    margin-bottom: 20px;
+  }
+  
+  .search-bar input {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+  }
+  
+  .search-bar button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+  }
+  
+  .content-wrapper {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .featured-content {
+    flex: 1;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+  }
+  
+  .featured-item {
+    margin-bottom: 20px;
+  }
+  
+  .featured-item h3 {
+    margin: 0 0 10px;
+  }
+  
+  .main-content {
+    flex: 3;
+  }
+  
+  .market-overview {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .market-index {
+    flex: 1;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    margin-right: 10px;
+  }
+  
+  .market-index:last-child {
+    margin-right: 0;
+  }
+  
+  .market-index h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+  
+  .market-index p {
+    margin: 5px 0 0;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .market-index .change {
+    font-size: 14px;
+  }
+  
+  .positive {
+    color: #28a745;
+  }
+  
+  .negative {
+    color: #dc3545;
+  }
+  
+  .news-and-sidebar {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .news-feed {
+    flex: 2;
+  }
+  
+  .news-item {
+    border-bottom: 1px solid #ddd;
+    padding: 15px 0;
+  }
+  
+  .news-item h3 {
+    margin: 0 0 10px;
+  }
+  
+  .news-item p {
+    margin: 0;
+    color: #666;
+  }
+  
+  .sidebar {
+    flex: 1;
+  }
+  
+  .watchlist,
+  .trending {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+  
+  .watchlist h2,
+  .trending h2 {
+    margin-top: 0;
+  }
+  
+  .stock-item,
+  .trending-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  @media (max-width: 1024px) {
+    .content-wrapper {
+      flex-direction: column;
+    }
+  
+    .featured-content {
+      order: 2;
+    }
+  
+    .main-content {
+      order: 1;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .market-overview {
+      flex-direction: column;
+    }
+  
+    .market-index {
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+  
+    .news-and-sidebar {
+      flex-direction: column;
+    }
+  
+    .news-feed {
+      margin-right: 0;
+      margin-bottom: 20px;
+    }
+  }
+  
+  

@@ -52,7 +52,7 @@ try{
 );
     
 
-    // await News.insertMany(newsArticles,{ordered:false})
+    
 
       
   
